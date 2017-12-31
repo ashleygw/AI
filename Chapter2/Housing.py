@@ -9,6 +9,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import Imputer, OneHotEncoder, StandardScaler
 from AddClasses import CombinedAttributesAdder, DataFrameSelector, CategoricalEncoder
+from sklearn.linear_model import LinearRegression
 
 #Download data (California housing)
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
@@ -149,3 +150,5 @@ housing_prepared = full_pipeline.fit_transform(housing)
 print(housing_prepared.shape)  # (16512, 16)
 
 #Selecting and training a model
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared, housing_labels)
