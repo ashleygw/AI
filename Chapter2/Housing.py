@@ -5,11 +5,14 @@ from six.moves import urllib
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit, cross_val_score
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import Imputer, OneHotEncoder, StandardScaler
 from AddClasses import CombinedAttributesAdder, DataFrameSelector, CategoricalEncoder
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 #Download data (California housing)
 DOWNLOAD_ROOT = "https://raw.githubusercontent.com/ageron/handson-ml/master/"
@@ -124,7 +127,7 @@ num_pipeline = Pipeline([
 ])
 housing_num_tr = num_pipeline.fit_transform(housing_num)
 
-#Using classes to refactor pipelines
+#Using classes to refactor pipelines (This is a streamlined version of the above)
 num_attribs = list(housing_num)
 cat_attribs = ["ocean_proximity"]
 
@@ -147,8 +150,65 @@ full_pipeline = FeatureUnion(transformer_list=[
 
 housing_prepared = full_pipeline.fit_transform(housing)
 
-print(housing_prepared.shape)  # (16512, 16)
+#print(housing_prepared.shape)  # (16512, 16)
 
 #Selecting and training a model
 lin_reg = LinearRegression()
 lin_reg.fit(housing_prepared, housing_labels)
+
+#Sample Linear regression
+some_data = housing.iloc[:5]
+some_labels = housing_labels.iloc[:5]
+some_data_prepared = full_pipeline.transform(some_data)
+#print(" Linear reg Predictions: ", lin_reg.predict(some_data_prepared))
+#print("Labels: ", list(some_labels))
+
+# Calculate rms error over dataset
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels, housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+#print(lin_rmse)
+
+#Decision Tree regression
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(housing_prepared, housing_labels)
+
+#Evaluate Tree - Completely overfits data
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
+#print(tree_mse)
+
+#Improving the decision tree with cross-validation
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+tree_rmse_scores = np.sqrt(-scores)
+
+
+def display_scores(scores):
+    print("Scores:", scores)
+    print("Mean:", scores.mean())
+    print("STdev:", scores.std())
+
+
+lin_scores = cross_val_score(lin_reg, housing_prepared,housing_labels, scoring="neg_mean_squared_error",cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+
+display_scores(lin_rmse_scores)
+display_scores(tree_rmse_scores)  # Mean is actually 70861, worse than linear
+
+#Random Forest Regressor
+forest_reg = RandomForestRegressor()
+forest_reg.fit(housing_prepared, housing_labels)
+
+#No cross validation
+housing_predictions = forest_reg.predict(housing_prepared)
+forest_mse = mean_squared_error(housing_labels, housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+print("NO CROSS FOREST: ",forest_rmse) # Good but high potential of overfitting
+
+#Cross validation
+scores = cross_val_score(forest_reg, housing_prepared,housing_labels, scoring="neg_mean_squared_error", cv=10)
+forest_rmse_scores =np.sqrt(-scores)
+display_scores(forest_rmse_scores)
+
+#Fine tuning

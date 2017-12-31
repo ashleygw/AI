@@ -43,7 +43,7 @@ class DataFrameSelector(BaseEstimator, TransformerMixin):
     from sklearn.preprocessing import LabelEncoder
     from scipy import sparse
 
-
+# Present in SKlearn .20 dev0
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
     """Encode categorical features as a numeric array.
     The input to this transformer should be a matrix of integers or strings,
