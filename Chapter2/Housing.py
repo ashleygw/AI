@@ -161,7 +161,7 @@ lin_reg.fit(housing_prepared, housing_labels)
 some_data = housing.iloc[:5]
 some_labels = housing_labels.iloc[:5]
 some_data_prepared = full_pipeline.transform(some_data)
-# print(" Linear reg Predictions: ", lin_reg.predict(some_data_prepared))
+# print("Linear reg Predictions: ", lin_reg.predict(some_data_prepared))
 # print("Labels: ", list(some_labels))
 
 # Calculate rms error over dataset
@@ -169,22 +169,18 @@ housing_predictions = lin_reg.predict(housing_prepared)
 lin_mse = mean_squared_error(housing_labels, housing_predictions)
 lin_rmse = np.sqrt(lin_mse)
 
-
-# print(lin_rmse)
-
 # Decision Tree regression
-# tree_reg = DecisionTreeRegressor()
-# tree_reg.fit(housing_prepared, housing_labels)
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(housing_prepared, housing_labels)
 
 # Evaluate Tree - Completely overfits data
-# housing_predictions = tree_reg.predict(housing_prepared)
-# tree_mse = mean_squared_error(housing_labels, housing_predictions)
-# tree_rmse = np.sqrt(tree_mse)
-# print(tree_mse)
+housing_predictions = tree_reg.predict(housing_prepared)
+tree_mse = mean_squared_error(housing_labels, housing_predictions)
+tree_rmse = np.sqrt(tree_mse)
 
 # Improving the decision tree with cross-validation
-# scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
-# tree_rmse_scores = np.sqrt(-scores)
+scores = cross_val_score(tree_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+tree_rmse_scores = np.sqrt(-scores)
 
 
 def display_scores(scores):
@@ -193,66 +189,69 @@ def display_scores(scores):
     print("STdev:", scores.std())
 
 
-# lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
-# lin_rmse_scores = np.sqrt(-lin_scores)
-# print("Linear")
-# display_scores(lin_rmse_scores)
-# print("Decision Tree")
-# display_scores(tree_rmse_scores)  # Mean is actually 70861, worse than linear
+lin_scores = cross_val_score(lin_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+lin_rmse_scores = np.sqrt(-lin_scores)
+print("Linear")
+display_scores(lin_rmse_scores)
+print("Decision Tree with cross validation")
+display_scores(tree_rmse_scores)  # Mean is actually 70861, worse than linear
 
 # Random Forest Regressor
-# forest_reg = RandomForestRegressor()
-# forest_reg.fit(housing_prepared, housing_labels)
+print("Random Forest Regressor")
+forest_reg = RandomForestRegressor()
+forest_reg.fit(housing_prepared, housing_labels)
 
 # No cross validation
-# housing_predictions = forest_reg.predict(housing_prepared)
-# forest_mse = mean_squared_error(housing_labels, housing_predictions)
-# forest_rmse = np.sqrt(forest_mse)
+print("No cross validation")
+housing_predictions = forest_reg.predict(housing_prepared)
+forest_mse = mean_squared_error(housing_labels, housing_predictions)
+forest_rmse = np.sqrt(forest_mse)
+print("forest_rmse", forest_rmse)
 
 # Cross validation
-# scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
-# forest_rmse_scores = np.sqrt(-scores)
-# print("Random Forest Regressor")
-# display_scores(forest_rmse_scores)
+print("Cross validation")
+scores = cross_val_score(forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+forest_rmse_scores = np.sqrt(-scores)
+display_scores(forest_rmse_scores)
 
 # Fine tuning
-# print("Randomized search")
-# param_grid = {"max_depth": [3, None],
-#               "max_features": sp_randint(1, 11),
-#               "min_samples_split": sp_randint(2, 11),
-#               "min_samples_leaf": sp_randint(1, 11),
-#               "bootstrap": [True, False],
-#               }
+print("Randomized search")
+param_grid = {"max_depth": [3, None],
+              "max_features": sp_randint(1, 11),
+              "min_samples_split": sp_randint(2, 11),
+              "min_samples_leaf": sp_randint(1, 11),
+              "bootstrap": [True, False],
+              }
 
-# forest_reg = RandomForestRegressor()
-# random_search = RandomizedSearchCV(forest_reg, param_grid, n_iter=20)
-# random_search.fit(housing_prepared, housing_labels)  # Doesn't retrain Forest_Reg
-# print("Best estimator: ", random_search.best_estimator_)
+forest_reg = RandomForestRegressor()
+random_search = RandomizedSearchCV(forest_reg, param_grid, n_iter=20)
+random_search.fit(housing_prepared, housing_labels)  # Doesn't retrain Forest_Reg
+print("Best estimator: ", random_search.best_estimator_)
 
-# random_forest_reg = RandomForestRegressor(bootstrap=False, criterion='mse', max_depth=None,
-#                                           max_features=5, max_leaf_nodes=None, min_impurity_decrease=0.0,
-#                                           min_impurity_split=None, min_samples_leaf=5,
-#                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
-#                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-#                                           verbose=0, warm_start=False)
-# scores = cross_val_score(random_forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
-# forest_rmse_scores = np.sqrt(-scores)
-# display_scores(forest_rmse_scores)
+random_forest_reg = RandomForestRegressor(bootstrap=False, criterion='mse', max_depth=None,
+                                          max_features=5, max_leaf_nodes=None, min_impurity_decrease=0.0,
+                                          min_impurity_split=None, min_samples_leaf=5,
+                                          min_samples_split=2, min_weight_fraction_leaf=0.0,
+                                          n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
+                                          verbose=0, warm_start=False)
+scores = cross_val_score(random_forest_reg, housing_prepared, housing_labels, scoring="neg_mean_squared_error", cv=10)
+forest_rmse_scores = np.sqrt(-scores)
+display_scores(forest_rmse_scores)
 
-print("Grid Search Forest Regressor")
+
 
 # Using Grid search to find optimal hyper parameters
-# print("Grid search")
-# param_grid = [  # 90 combinations
-#     {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
-#     {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]}
-# ]
+print("Grid Search Forest Regressor")
+param_grid = [  # 90 combinations
+    {'n_estimators': [3, 10, 30], 'max_features': [2, 4, 6, 8]},
+    {'bootstrap': [False], 'n_estimators': [3, 10], 'max_features': [2, 3, 4]}
+]
 
-# forest_reg = RandomForestRegressor()
-#grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', refit=True)
-# grid_search.fit(housing_prepared, housing_labels)  # Doesn't retrain Forest_Reg
+forest_reg = RandomForestRegressor()
+grid_search = GridSearchCV(forest_reg, param_grid, cv=5, scoring='neg_mean_squared_error', refit=True)
+grid_search.fit(housing_prepared, housing_labels)  # Doesn't retrain Forest_Reg
 
-# print("Best estimator: ", grid_search.best_estimator_)
+print("Best estimator: ", grid_search.best_estimator_)
 
 forest_reg = RandomForestRegressor(bootstrap=True, criterion='mse', max_depth=None,
                                    max_features=6, max_leaf_nodes=None, min_impurity_decrease=0.0,
@@ -269,3 +268,19 @@ display_scores(forest_rmse_scores)  # Best score Mean: 49742.353043 STdev: 1668.
 # Feature Importance can be found with
 # grid_search.best_estimator_.feature_importances
 
+print("Testing final data with optimized RandomForestRegressor")
+final_model = RandomForestRegressor(bootstrap=True, criterion='mse', max_depth=None,
+                                    max_features=6, max_leaf_nodes=None, min_impurity_decrease=0.0,
+                                    min_impurity_split=None, min_samples_leaf=1,
+                                    min_samples_split=2, min_weight_fraction_leaf=0.0,
+                                    n_estimators=30, n_jobs=1, oob_score=False, random_state=None,
+                                    verbose=0, warm_start=False)
+final_model.fit(housing_prepared, housing_labels)
+X_test = strat_test_set.drop("median_house_value", axis=1)
+y_test = strat_test_set["median_house_value"].copy()
+X_test_prepared = full_pipeline.transform(X_test)
+final_predictions = final_model.predict(X_test_prepared)
+final_mse = mean_squared_error(y_test, final_predictions)
+final_rmse = np.sqrt(final_mse)
+
+print("Final rmse: ", final_rmse)  # 47900.0074067
