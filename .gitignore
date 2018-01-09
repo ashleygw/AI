@@ -3,5 +3,6 @@
 *.xml
 *.iml
 Chapter2/venv/
+Chapter3/venv/
 
 Chapter2/datasets/
