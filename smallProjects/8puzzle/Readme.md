@@ -1,0 +1,2 @@
+Using a genetic algorithm to solve 8 puzzle. 
+This is a very bad way to try and solve this puzzle. There is likely no good fitness function without already knowing too much about the board state and solution.
