@@ -1,3 +1,16 @@
+"""
+Make sure to fill in the following information before submitting your
+assignment. Your grade may be affected if you leave it blank!
+For usernames, make sure to use your Whitman usernames (i.e. exleyas).
+File name: informed.py
+Author username(s): millersm ashleygw
+Date: 1/31/18
+"""
+
+from puzzle8 import get_tile, solution, neighbors, blank_square, move_blank, random_state, state, xylocation
+from queue import PriorityQueue
+import time
+
 class Node:
     '''
     Node class that keeps track of bookkeeping for our informed searches.
@@ -62,8 +75,74 @@ def manhattan_distance(state):
         sum += movesaway(i, locationitshouldbein)
     print(sum)
     return sum
-    
-    
+
+dic = {
+    (1,2):1,
+    (1,3):2,
+    (1,4):1,
+    (1,5):2,
+    (1,6):3,
+    (1,7):2,
+    (1,8):3,
+    (2,1):1,
+    (2,3):1,
+    (2,4):2,
+    (2,5):1,
+    (2,6):2,
+    (2,7):3,
+    (2,8):2,
+    (3,1):2,
+    (3,2):1,
+    (3,4):3,
+    (3,5):2,
+    (3,6):1,
+    (3,7):3,
+    (3,8):2,
+    (4,1):1,
+    (4,2):2,
+    (4,3):3,
+    (4,5):1,
+    (4,6):2,
+    (4,7):1,
+    (4,8):2,
+    (5,1):2,
+    (5,2):1,
+    (5,3):2,
+    (5,4):1,
+    (5,6):1,
+    (5,7):2,
+    (5,8):1,
+    (6,1):3,
+    (6,2):2,
+    (6,3):1,
+    (6,4):2,
+    (6,5):1,
+    (6,7):3,
+    (6,8):2,
+    (7,1):2,
+    (7,2):3,
+    (7,3):4,
+    (7,4):1,
+    (7,5):2,
+    (7,6):3,
+    (7,8):1,
+    (8,1):3,
+    (8,2):2,
+    (8,3):3,
+    (8,4):2,
+    (8,5):1,
+    (8,6):2,
+    (8,7):1,
+    (0,1):4,
+    (0,2):3,
+    (0,3):2,
+    (0,4):3,
+    (0,5):2,
+    (0,6):1,
+    (0,7):2,
+    (0,8):1,
+}
+
 def verify(state, sol):
     print(sol)
     currentState = state
@@ -98,9 +177,12 @@ def astar(state, heuristic):
                     frontier.put(child)
     return None
 
+
+
+
 for i in range(100):
     sample = random_state(20)
-    #sample = state([8,6,7,2,5,4,3,0,1])  #  Hardest possible board state
+    sample = state([8,6,7,2,5,4,3,0,1])  #  Hardest possible board state
     sol = astar(sample, manhattan_distance)
     verify(sample, sol)
 
