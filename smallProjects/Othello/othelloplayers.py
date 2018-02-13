@@ -15,6 +15,7 @@ bigger the better).
 Feel free to add additional methods or functions.'''
 
 import othelloboard
+import numpy as np
 
 class HumanPlayer:
     '''Interactive player: prompts the user to make a move.'''
@@ -52,6 +53,112 @@ def utility(board, color):
                 sum += board.array[i][j] * 2    
     return sum * color
 
+#https://github.com/kartikkukreja/blog-codes/blob/master/src/Heuristic%20Function%20for%20Reversi%20(Othello).cpp
+# I believe this guy took this from UW research
+def superUtilityFunction(board, color):
+    my_tiles = 0
+    opp_tiles = 0
+    my_front_tiles = 0
+    opp_front_tiles = 0
+    p = 0
+    c = 0
+    l = 0
+    m = 0
+    f = 0
+    d = 0
+    X1 = np.array([-1, -1, 0, 1, 1, 1, 0, -1])
+    Y1 = np.array([0, 1, 1, 1, 0, -1, -1, -1])
+    V = np.array([[20, -3, 11, 8, 8, 11, -3, 20],[-3, -7, -4, 1, 1, -4, -7, -3],[11, -4, 2, 2, 2, 2, -4, 11], [8, 1, 2, -3, -3, 2, 1, 8],[8, 1, 2, -3, -3, 2, 1, 8],[11, -4, 2, 2, 2, 2, -4, 11],[-3, -7, -4, 1, 1, -4, -7, -3],[20, -3, 11, 8, 8, 11, -3, 20]])
+    for i in range(8):
+        for j in range(8):
+            if board.array[i+1][j+1] == color: 
+                d += V[i][j]
+                my_tiles += 1
+            elif board.array[i+1][j+1] == -color:
+                d -= V[i][j]
+                opp_tiles += 1
+            if board.array[i+1][j+1] != 0:
+                for k in range(8):
+                    x = i + X1[k]
+                    y = j + Y1[k]
+                    if x >= 1 and x < 9 and y >= 1 and y < 9 and board.array[x][y] == 0:
+                        if board.array[i+1][j+1] == color:
+                            my_front_tiles += 1
+                        else:
+                            opp_front_tiles += 1
+                        break
+    if my_tiles > opp_tiles:
+        p = (100.0 * my_tiles)/(my_tiles + opp_tiles)
+    elif my_tiles < opp_tiles:
+        p = -(100.0 * opp_tiles)/(my_tiles + opp_tiles)
+    else:
+        p = 0
+    if my_front_tiles > opp_front_tiles:
+        f = -(100.0 * my_front_tiles)/(my_front_tiles + opp_front_tiles)
+    elif my_front_tiles < opp_front_tiles:
+        f = (100.0 * opp_front_tiles)/(my_front_tiles + opp_front_tiles)
+    else:
+        f = 0
+    my_tiles = opp_tiles = 0
+    if(board.array[1][1] == color): my_tiles+=1
+    elif(board.array[1][1] == -color): opp_tiles+=1
+    if(board.array[1][8] == color): my_tiles+=1
+    elif(board.array[1][8] == -color): opp_tiles+=1
+    if(board.array[8][1] == color): my_tiles+=1
+    elif(board.array[8][1] == -color): opp_tiles+=1
+    if(board.array[8][8] == color): my_tiles+=1
+    elif(board.array[8][8] == -color): opp_tiles+=1
+
+    c = 25 * (my_tiles - opp_tiles)
+
+
+    my_tiles = opp_tiles = 0
+
+    if(board.array[1][1] == 0):
+        if(board.array[1][2] == color): my_tiles+=1
+        elif(board.array[1][2] == -color): opp_tiles+=1
+        if(board.array[2][2] == color): my_tiles+=1
+        elif(board.array[2][2] == -color): opp_tiles+=1
+        if(board.array[2][1] == color): my_tiles+=1
+        elif(board.array[2][1] == -color): opp_tiles+=1
+    
+    if(board.array[1][8] == 0):
+        if(board.array[1][7] == color): my_tiles+=1
+        elif(board.array[1][7] == -color): opp_tiles+=1
+        if(board.array[2][7] == color): my_tiles+=1
+        elif(board.array[2][7] == -color): opp_tiles+=1
+        if(board.array[2][8] == color): my_tiles+=1
+        elif(board.array[2][8] == -color): opp_tiles+=1
+    
+    if(board.array[8][1] == 0):
+        if(board.array[8][2] == color): my_tiles+=1
+        elif(board.array[8][2] == -color): opp_tiles+=1
+        if(board.array[7][2] == color): my_tiles+=1
+        elif(board.array[7][2] == -color): opp_tiles+=1
+        if(board.array[7][1] == color): my_tiles+=1
+        elif(board.array[7][1] == -color): opp_tiles+=1
+    
+    if(board.array[8][8] == 0):
+        if(board.array[7][8] == color): my_tiles+=1
+        elif(board.array[7][8] == -color): opp_tiles+=1
+        if(board.array[7][7] == color): my_tiles+=1
+        elif(board.array[7][7] == -color): opp_tiles+=1
+        if(board.array[8][7] == color): my_tiles+=1
+        elif(board.array[8][7] == -color): opp_tiles+=1
+    
+    l = -12.5 * (my_tiles - opp_tiles)
+    my_tiles = len(board._legalMoves(color))
+    opp_tiles = len(board._legalMoves(-color))
+
+    if(my_tiles > opp_tiles):
+        m = (100.0 * my_tiles)/(my_tiles + opp_tiles)
+    elif(my_tiles < opp_tiles):
+        m = -(100.0 * opp_tiles)/(my_tiles + opp_tiles)
+    else:
+        m = 0
+    return (10 * p) + (801.724 * c) + (382.026 * l) + (78.922 * m) + (74.396 * f) + (10 * d)
+
+
 
 stabilityHeuristic = [[4,-3,2,2,2,2,-3,4],[-3,-4,-1,-1,-1,-1,-4,-3],[2,-1,1,0,0,1,-1,2],[2,-1,0,1,1,0,-1,2],[2,-1,0,1,1,0,-1,2],[2,-1,1,0,0,1,-1,2],[-3,-4,-1,-1,-1,-1,-4,-3],[4,-3,2,2,2,2,-3,4]]
 def utility2(board, color):
@@ -75,11 +182,12 @@ class ComputerPlayer:
         moves = board._legalMoves(self.color)
         #movies = []
         if moves:
-            bestMove = -1000
+            bestMove = -10000000
             for move in moves:
                 #value = self.minimax(self.plies - 1, board.makeMove(move[0],move[1],self.color), -self.color, False,-100,100) # False = min case
-                value = self.MINimax(board.makeMove(move[0],move[1],self.color), self.plies-1, -1000,1000)
-                #value = self.negamax(self.plies - 1, board.makeMove(move[0],move[1],self.color),-self.color,-1000,1000)
+                #value = self.MINimax(board.makeMove(move[0],move[1],self.color), self.plies-1, -1000,1000)
+                value = self.negamax(self.plies - 1, board.makeMove(move[0],move[1],self.color),-self.color,-1000000,1000000)
+                print(move, " evaluated by ", self.color, " at ", value)
                 if value > bestMove:
                     bestMove = value
                     bestMoveFound = move
@@ -92,7 +200,7 @@ class ComputerPlayer:
 
     def MINimax(self, board, depth, alpha = None, beta = None):
         if depth == 0 or self.terminalStateBAD(board):
-            return utility(board, self.color)
+            return superUtilityFunction(board, self.color)
         boards = []
         for i in range(1, 9):
             for j in range(1, 9):
@@ -101,7 +209,7 @@ class ComputerPlayer:
                     boards.append(bcopy)
         if not boards:
             return self.miniMAX(board, depth - 1, alpha,beta)
-        bestMove = 100
+        bestMove = 100000000
         for board in boards:
             bestMove = min(bestMove, self.miniMAX(board, depth - 1, alpha,beta))
             if bestMove <= alpha:
@@ -111,7 +219,7 @@ class ComputerPlayer:
 
     def miniMAX(self, board, depth, alpha = None, beta = None):
         if depth == 0 or self.terminalStateBAD(board):
-            return utility(board, self.color)
+            return superUtilityFunction(board, self.color)
         boards = []
         for i in range(1, 9):
             for j in range(1, 9):
@@ -120,7 +228,7 @@ class ComputerPlayer:
                     boards.append(bcopy)
         if not boards:
             return self.MINimax(board, depth - 1, alpha,beta)
-        bestMove = -100
+        bestMove = -10000000
         for board in boards:
             bestMove = max(bestMove, self.MINimax(board, depth - 1, alpha,beta))
             if bestMove >= beta:
@@ -172,7 +280,7 @@ class ComputerPlayer:
 
     def negamax(self, depth, board,turn, alpha, beta):
         if depth == 0:
-            return utility2(board, turn)
+            return superUtilityFunction(board, turn)
         boards = []
         for i in range(1, 9):
             for j in range(1, 9):
@@ -181,11 +289,11 @@ class ComputerPlayer:
                     boards.append(bcopy)
         if not boards:
             if not board._legalMoves(-turn):
-                return utility2(board, self.color)
+                return superUtilityFunction(board, self.color)
             else:
                 return -self.negamax(depth - 1, board,-turn,-beta,-alpha)
         for b in boards:
-            score = -self.negamax(depth - 1,b,-turn, -beta, -alpha);
+            score = -self.negamax(depth - 1,b,-turn, -beta, -alpha)
             if score >= beta:
                 return beta
             if score > alpha:
