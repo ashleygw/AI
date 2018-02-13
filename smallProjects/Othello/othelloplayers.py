@@ -7,8 +7,6 @@ Author username(s): ashleygw
 Date: Friday 9th February
 """
 
-
-
 '''You should modify the chooseMove code for the ComputerPlayer
 class. You should also modify the utility function, which should
 return a number indicating the value of that board position (the
@@ -17,7 +15,6 @@ bigger the better).
 Feel free to add additional methods or functions.'''
 
 import othelloboard
-
 
 class HumanPlayer:
     '''Interactive player: prompts the user to make a move.'''
@@ -44,7 +41,7 @@ class HumanPlayer:
             return move
 
 
-def utility(board, color='white'):
+def utility(board, color):
     '''This very silly utility just adds up all the 1s, -1s, and 0s
     stored on the othello board.'''
     sum = 0
@@ -52,27 +49,17 @@ def utility(board, color='white'):
         for j in range(1, othelloboard.SIZE - 1):
             sum += board.array[i][j]
             if i == 1 or j == 1 or i == othelloboard.SIZE - 1 or j == othelloboard.SIZE - 1:
-                sum += board.array[i][j] * 2
-    return sum
+                sum += board.array[i][j] * 2    
+    return sum * color
 
-def minimax(depth, board, color, toggle, alpha=None, beta=None):
-    moves = board._legalMoves(color)
-    if depth == 0 or not moves:
-        if (color == 1 and not toggle) or (color == -1 and toggle):
-            return -utility(board)
-        else:
-            return utility(board) #white is positive evaluation
-    else:
-        if toggle: #MAX CASE
-            bestMove = -9999
-            for move in moves:
-                bestMove = max(bestMove, minimax(depth - 1, board.makeMove(move[0],move[1], color), color * -1, not toggle))
-        else:
-            bestMove = 9999 # MIN CASE
-            for move in moves:
-                bestMove = min(bestMove, minimax(depth - 1, board.makeMove(move[0],move[1], color), color * -1, not toggle))
-        return bestMove
 
+stabilityHeuristic = [[4,-3,2,2,2,2,-3,4],[-3,-4,-1,-1,-1,-1,-4,-3],[2,-1,1,0,0,1,-1,2],[2,-1,0,1,1,0,-1,2],[2,-1,0,1,1,0,-1,2],[2,-1,1,0,0,1,-1,2],[-3,-4,-1,-1,-1,-1,-4,-3],[4,-3,2,2,2,2,-3,4]]
+def utility2(board, color):
+    sum = 0
+    for i in range(1, othelloboard.SIZE - 1):
+        for j in range(1, othelloboard.SIZE - 1):
+            sum += board.array[i][j] * stabilityHeuristic[i-1][j-1] 
+    return sum * color
 
 
 class ComputerPlayer:
@@ -85,20 +72,125 @@ class ComputerPlayer:
         self.plies = plies
 
     def chooseMove(self, board):
-        '''This very silly player just returns the first legal move
-        that it finds.'''
         moves = board._legalMoves(self.color)
+        #movies = []
         if moves:
-            bestMove = -9999
-            bestMoveFound = moves[0]  # why not
+            bestMove = -1000
             for move in moves:
-                value = minimax(self.plies - 1, board.makeMove(move[0],move[1],self.color), -1 * self.color, 0)
-                if value >= bestMove:
+                #value = self.minimax(self.plies - 1, board.makeMove(move[0],move[1],self.color), -self.color, False,-100,100) # False = min case
+                value = self.MINimax(board.makeMove(move[0],move[1],self.color), self.plies-1, -1000,1000)
+                #value = self.negamax(self.plies - 1, board.makeMove(move[0],move[1],self.color),-self.color,-1000,1000)
+                if value > bestMove:
                     bestMove = value
                     bestMoveFound = move
             return bestMoveFound
         else: return None
 
+    def terminalStateBAD(self, board):
+        return not board._legalMoves(1) and not board._legalMoves(-1)
+        
+
+    def MINimax(self, board, depth, alpha = None, beta = None):
+        if depth == 0 or self.terminalStateBAD(board):
+            return utility(board, self.color)
+        boards = []
+        for i in range(1, 9):
+            for j in range(1, 9):
+                bcopy = board.makeMove(i, j, -self.color)
+                if bcopy != None:
+                    boards.append(bcopy)
+        if not boards:
+            return self.miniMAX(board, depth - 1, alpha,beta)
+        bestMove = 100
+        for board in boards:
+            bestMove = min(bestMove, self.miniMAX(board, depth - 1, alpha,beta))
+            if bestMove <= alpha:
+                return bestMove
+            beta = min(beta, bestMove)
+        return bestMove
+
+    def miniMAX(self, board, depth, alpha = None, beta = None):
+        if depth == 0 or self.terminalStateBAD(board):
+            return utility(board, self.color)
+        boards = []
+        for i in range(1, 9):
+            for j in range(1, 9):
+                bcopy = board.makeMove(i, j, self.color)
+                if bcopy != None:
+                    boards.append(bcopy)
+        if not boards:
+            return self.MINimax(board, depth - 1, alpha,beta)
+        bestMove = -100
+        for board in boards:
+            bestMove = max(bestMove, self.MINimax(board, depth - 1, alpha,beta))
+            if bestMove >= beta:
+                return bestMove
+            alpha = max(alpha, bestMove)
+        return bestMove
+
+
+    def minimax(self, depth, board, turn, toggle, alpha=None, beta=None):
+        boards = []
+        for i in range(1, 9):
+            for j in range(1, 9):
+                bcopy = board.makeMove(i, j, turn)
+                if bcopy != None:
+                    boards.append(bcopy)
+
+        if depth == 0:
+            return utility(board, self.color)
+
+        if not boards:
+            if not board._legalMoves(-turn):
+                return utility(board, self.color)
+            else:
+                return self.minimax(depth - 1, board, -turn, not toggle,alpha,beta)
+        
+        if toggle: #MAX CASE
+            #print(spacing + "MAXIMIZING at depth: ", depth)
+            bestMove = -100
+            for board in boards:
+                temp = self.minimax(depth - 1, board, -turn, False,alpha,beta)
+                #choices.append(temp)
+                bestMove = max(bestMove, temp)
+                alpha = max(alpha, bestMove)
+                if beta <= alpha:
+                    return bestMove
+        else:
+            #print(spacing + "MINIMIZING at depth: ", depth)
+            bestMove = 100 # MIN CASE
+            for board in boards:
+                temp = self.minimax(depth - 1, board, -turn, True,alpha,beta)
+                #choices.append(temp)
+                bestMove = min(bestMove, temp)
+                beta = min(bestMove, beta)
+                if beta <= alpha:
+                    return bestMove
+        #print(spacing + str(choices))
+        #print(spacing + "BEST MOVE: ", bestMove, "Depth: ", depth)
+        return bestMove
+
+    def negamax(self, depth, board,turn, alpha, beta):
+        if depth == 0:
+            return utility2(board, turn)
+        boards = []
+        for i in range(1, 9):
+            for j in range(1, 9):
+                bcopy = board.makeMove(i, j, turn)
+                if bcopy != None:
+                    boards.append(bcopy)
+        if not boards:
+            if not board._legalMoves(-turn):
+                return utility2(board, self.color)
+            else:
+                return -self.negamax(depth - 1, board,-turn,-beta,-alpha)
+        for b in boards:
+            score = -self.negamax(depth - 1,b,-turn, -beta, -alpha);
+            if score >= beta:
+                return beta
+            if score > alpha:
+                alpha = score
+            return alpha
 
 
 """def chooseMoveCopy(self, board):
