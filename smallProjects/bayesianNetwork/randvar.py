@@ -3,7 +3,7 @@ Make sure to fill in the following information before submitting your
 assignment. Your grade may be affected if you leave it blank!
 For usernames, make sure to use your Whitman usernames (i.e. exleyas). 
 File name: randvar.py
-Author username(s): ashleygw
+Author username(s): ashleygw, millersm
 Date: 5/4/2018
 """
 
@@ -37,6 +37,7 @@ class RVNode:
         self.vrange = vrange
         self.deps = dependencies
         self.CPT = {}
+        self.sizedict = {}
         if self.deps == None:
             # okay, this RV does not depend on anything, we want a prior distr.
             for var in self.vrange:
@@ -70,6 +71,9 @@ class RVNode:
              self.CPT[(1,)][0] = 1
              self.CPT[(1,)][1] = 1
         '''
+        size = len(examples)
+        
+        #print(self.CPT)
         if not isinstance(examples[0], list):
             save = {}
             for item in examples:
@@ -77,21 +81,30 @@ class RVNode:
                     save[item] = 1
                 else:
                     save[item] += 1
-            size = len(examples)
             for item in save:
                 self.CPT[item] = save[item]/size
         else:
-            for pair in examples:
-                for a,b in pair:
-                    if (a,) not in self.CPT:
-                        self.CPT[(a,)] = {}
-                        self.CPT[(a,)][b] = 1
-                    else:
-                        if b in self.CPT[(a,)]:
-                            self.CPT[(a,)][b] += 1
-                        else:
-                            self.CPT[(a,)][b] = 1
-        print(self.CPT)
+            for a,b in examples:
+                # print(sizedict)
+                # print(self.CPT)
+                # if (a,) not in self.CPT:
+                #     self.CPT[(a,)] = {}
+                #     self.CPT[(a,)][b] = 1
+                #     sizedict[(a,)] = 1
+                # else:
+                if (a,) in self.sizedict:
+                    self.sizedict[(a,)] += 1
+                else:
+                    self.sizedict[(a,)] = 1
+                if b in self.CPT[(a,)]:
+                    self.CPT[(a,)][b] += 1
+                else:
+                    self.CPT[(a,)][b] = 1
+            for key in self.CPT:
+                for key2 in self.CPT[key]:
+                    self.CPT[key][key2] /= self.sizedict[key]
+
+        #print(self.CPT)
 
     def sample(self, depvals = None):
         '''Generates a random sample from this RV.
@@ -108,6 +121,13 @@ class RVNode:
                 if r < 0:
                     return i
         else:
+            dep = depvals[0] # 1
+            r = random.random()
+            for i in self.CPT[(dep,)]:
+                #print(self.CPT[(depvals[0],)])
+                r = r - self.CPT[(dep,)][i]
+                if r < 0:
+                    return i
             
 
 
