@@ -70,6 +70,8 @@ class RVNode:
              self.CPT[(0,)][1] = 2
              self.CPT[(1,)][0] = 1
              self.CPT[(1,)][1] = 1
+        I USE PROBABILITIES NOT THESE NUMBERS
+        FOR THIS EXAMPLE THESE ARE THE SAME FORM AS ABOVE
         '''
         size = len(examples)
         
