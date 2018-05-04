@@ -74,8 +74,6 @@ class RVNode:
         FOR THIS EXAMPLE THESE ARE THE SAME FORM AS ABOVE
         '''
         size = len(examples)
-        
-        #print(self.CPT)
         if not isinstance(examples[0], list):
             save = {}
             for item in examples:
@@ -86,22 +84,17 @@ class RVNode:
             for item in save:
                 self.CPT[item] = save[item]/size
         else:
-            for a,b in examples:
-                # print(sizedict)
-                # print(self.CPT)
-                # if (a,) not in self.CPT:
-                #     self.CPT[(a,)] = {}
-                #     self.CPT[(a,)][b] = 1
-                #     sizedict[(a,)] = 1
-                # else:
-                if (a,) in self.sizedict:
-                    self.sizedict[(a,)] += 1
+            for l in examples:
+                a = tuple(l[:-1])
+                b = l[-1]
+                if a in self.sizedict:
+                    self.sizedict[a] += 1
                 else:
-                    self.sizedict[(a,)] = 1
-                if b in self.CPT[(a,)]:
-                    self.CPT[(a,)][b] += 1
+                    self.sizedict[a] = 1
+                if b in self.CPT[a]:
+                    self.CPT[a][b] += 1
                 else:
-                    self.CPT[(a,)][b] = 1
+                    self.CPT[a][b] = 1
             for key in self.CPT:
                 for key2 in self.CPT[key]:
                     self.CPT[key][key2] /= self.sizedict[key]
@@ -117,21 +110,16 @@ class RVNode:
         if not self.deps:
             r = random.random()
             for i in self.CPT:
-                # print(i)
-                # print(r)
                 r = r - self.CPT[i]
                 if r < 0:
                     return i
         else:
-            dep = depvals[0] # 1
+            dep = tuple(depvals)
             r = random.random()
-            for i in self.CPT[(dep,)]:
-                #print(self.CPT[(depvals[0],)])
-                r = r - self.CPT[(dep,)][i]
+            for i in self.CPT[dep]:
+                r = r - self.CPT[dep][i]
                 if r < 0:
                     return i
-            
-
 
 
 def test_simple():
@@ -169,10 +157,40 @@ def test_1dep():
             zcount += 1
     print('After 1000 samples without rain, got %d 0s.' % zcount)
 
+def test2_1dep():
+    '''tests an RV with one dependency but not a bool var
+    '''
+    r1 = RVNode('Season', ['spring', 'summer', 'fall', 'winter'])
+    r1.train(['spring', 'summer', 'fall', 'winter']) # equal prob for each
+    
+    r2 = RVNode('Rain', [0,1], dependencies = [r1])
+    r2.train([
+        ['winter', 0],
+        ['winter', 1],
+        ['winter', 1],
+        ['spring', 0],
+        ['spring', 1],
+        ['summer', 0],
+        ['summer', 0],
+        ['summer', 0],
+        ['summer', 0],
+        ['summer', 0],
+        ['summer', 1],
+        ['fall', 0],
+        ['fall', 1]
+    ])
+    
+    zcount = 0
+    for i in range(1000):
+        result = r2.sample(['summer'])
+        if result == 0:
+            zcount += 1
+    print('Out of 1000 simulated summer days, it did not rain %d of them.' % zcount)
 
 def main():
     test_simple()
     test_1dep()
+    test2_1dep()
 
 if __name__ == '__main__':
     main()
