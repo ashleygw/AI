@@ -17,6 +17,7 @@ By Andy Exley
 '''
 import itertools
 import random
+from collections import defaultdict
 
 class RVNode:
     '''
@@ -37,7 +38,7 @@ class RVNode:
         self.vrange = vrange
         self.deps = dependencies
         self.CPT = {}
-        self.sizedict = {}
+        self.sizedict = defaultdict(lambda: 0)
         if self.deps == None:
             # okay, this RV does not depend on anything, we want a prior distr.
             for var in self.vrange:
@@ -75,31 +76,20 @@ class RVNode:
         '''
         size = len(examples)
         if not isinstance(examples[0], list):
-            save = {}
+            save = defaultdict(lambda: 0)
             for item in examples:
-                if item not in save:
-                    save[item] = 1
-                else:
-                    save[item] += 1
+                save[item] += 1
             for item in save:
                 self.CPT[item] = save[item]/size
         else:
             for l in examples:
                 a = tuple(l[:-1])
                 b = l[-1]
-                if a in self.sizedict:
-                    self.sizedict[a] += 1
-                else:
-                    self.sizedict[a] = 1
-                if b in self.CPT[a]:
-                    self.CPT[a][b] += 1
-                else:
-                    self.CPT[a][b] = 1
+                self.sizedict[a] += 1
+                self.CPT[a][b] += 1
             for key in self.CPT:
                 for key2 in self.CPT[key]:
                     self.CPT[key][key2] /= self.sizedict[key]
-
-        #print(self.CPT)
 
     def sample(self, depvals = None):
         '''Generates a random sample from this RV.
