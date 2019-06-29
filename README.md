@@ -2,4 +2,4 @@ Here are the projects I'm working on with Scikit-Learn and TensorFlow. Folders t
 
 Small projects - Includes my work from the Artificial Intelligence and Machine Learning courses at Whitman College.
 
-Larger projects have gotten their own repositories now. 
+Most larger projects have gotten their own repositories now. 
